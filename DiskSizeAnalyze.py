@@ -1,18 +1,17 @@
 """
 
     Directories Size on Disk Analyzer
-    
+
     Author: Salas
     Update: 2014/08/20
 
 """
 import os
 import sys
-from stat import *
 
-FILENAME = r"snapshot.html"
-TEMPLATE = r"source\res\template.html"
-ERR_DUMP = r"error_dump.log"
+FILENAME = "snapshot.html"
+TEMPLATE = "source/res/template.html"
+ERR_DUMP = "error_dump.log"
 
 template = open(TEMPLATE, 'r')
 snapshot = open(FILENAME, 'w', encoding='utf8')
@@ -30,6 +29,7 @@ total_file = 0
 total_dirs = 0
 total_size = 0
 
+
 def scaler(size):
     """ transform the size into string scale
     """
@@ -37,23 +37,20 @@ def scaler(size):
     while size > 1024:
         size /= 1024
         scale += 1
-    scaler = {
-        0: 'B',
-        1: 'KB',
-        2: 'MB',
-        3: 'GB',
-    }
-    size = int(size * 10) / 10
+    return '{0:.1f} '.format(size) + ('B', 'KB', 'MB', 'GB')[scale]
 
-    return str(size) + ' ' + scaler[scale]
 
 def treesize_simple(path):
     """ One line implementation,
         but no exception control """
-    return sum(os.path.getsize(os.path.join(dirpath, filename)) for dirpath, dirnames, filenames in os.walk(path) for filename in filenames)
+    return sum(os.path.getsize(os.path.join(dirpath, filename))
+               for dirpath, dirnames, filenames in os.walk(path)
+               for filename in filenames
+               )
+
 
 def treesize(path):
-    """ recursively get the size of 
+    """ recursively get the size of
         all files and directories under the path """
     if os.path.isfile(path):
         sum_size = os.path.getsize(path)
@@ -82,6 +79,7 @@ def treesize(path):
 
     return str_size, raw_size
 
+
 def reporter(root, result):
     """ generate the report file,
         using template view defined under ./source/res/
@@ -101,11 +99,11 @@ def reporter(root, result):
             'highlight: "%s",'
             'label: "%s" },'
             % (value[1], COLORSET[choose][0], COLORSET[choose][1], key)
-        	)
+        )
         entries += (
-        	'<li class="list-group-item" style="color:%s">%s - %s</li>' 
-        	% (COLORSET[choose][0], key, value[0])
-        	)
+            '<li class="list-group-item" style="color:%s">%s - %s</li>'
+            % (COLORSET[choose][0], key, value[0])
+        )
         total_size += value[1]
         choose += 1
     data += '];'
@@ -119,11 +117,12 @@ def reporter(root, result):
 
     # Remove err_dump.log file if it's empty
     remove_err_log = False
-    with open(ERR_DUMP, 'r') as f:
+    with open(ERR_DUMP, 'r', encoding='utf-8') as f:
         if not f.read():
             remove_err_log = True
     if remove_err_log:
         os.remove(ERR_DUMP)
+
 
 def path_norm(path):
     path.strip()
@@ -138,20 +137,22 @@ def path_norm(path):
         使用方法:
         1. 手動輸入欲分析資料夾路徑
         2. 直接將資料夾拖進視窗
-       
-                Author: Salas 2014/08 
+
+                Author: Salas 2014/08
         '''
-print(使用方法)
-PATH = input('> ')
-if not PATH:
-    sys.exit(0)
 
-path = path_norm(PATH)
+if __name__ == '__main__':
+    print(使用方法)
+    PATH = input('> ')
+    if not PATH:
+        sys.exit(0)
 
-result = dict()
-for p in os.listdir(path):
-    pp = os.path.join(path, p)
-    result[p] = treesize(pp)
+    path = path_norm(PATH)
+    print(path)
+    result = dict()
+    for p in os.listdir(path):
+        pp = os.path.join(path, p)
+        result[p] = treesize(pp)
 
-reporter(PATH, result)
-os.system("start " + FILENAME)
+    reporter(PATH, result)
+    os.system("start " + FILENAME)
