@@ -7,7 +7,7 @@ from diskanalyze.utils import scaler
 
 def traverse(node):
     print('{}"{}" ... {}'.format(
-        ' ' * node.level, node.name, scaler(node.size)))
+        ' ' * node.level, node.name, scaler(node.folder_size)))
     for e in node.children:
         traverse(e)
 
@@ -19,8 +19,8 @@ path = sys.argv[1] if len(sys.argv) > 1 else 'C:\\Users\\salas'
 root = Tree(path)
 
 s = time.time()
-root.size = get_tree_size(path, root, THRESHOLD)
+_ = get_tree_size(path, root)
 print('Total size of "{}": {} (in {:.3f} sec.)'.format(
-    path, scaler(root.size), time.time() - s))
+    path, scaler(root.folder_size), time.time() - s))
 
 traverse(root)

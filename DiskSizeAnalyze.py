@@ -7,7 +7,10 @@
 
 """
 import os
-import sys
+
+from diskanalyze.dirtree import Tree, get_tree_size
+import diskanalyze.utils as utils
+
 
 FILENAME = "snapshot.html"
 TEMPLATE = "source/res/template.html"
@@ -25,92 +28,39 @@ COLORSET = [("#F7464A", "#FF5A5E"),
             ("#949FB1", "#A8B3C5"),
             ("#4D5360", "#616774")]
 
-total_file = 0
-total_dirs = 0
-total_size = 0
-
-
-def scaler(size):
-    """ transform the size into string scale
-    """
-    scale = 0
-    while size > 1024:
-        size /= 1024
-        scale += 1
-    return '{0:.1f} '.format(size) + ('B', 'KB', 'MB', 'GB')[scale]
-
-
-def treesize_simple(path):
-    """ One line implementation,
-        but no exception control """
-    return sum(os.path.getsize(os.path.join(dirpath, filename))
-               for dirpath, dirnames, filenames in os.walk(path)
-               for filename in filenames
-               )
-
-
-def treesize(path):
-    """ recursively get the size of
-        all files and directories under the path """
-    if os.path.isfile(path):
-        sum_size = os.path.getsize(path)
-    else:
-        sum_size = 0
-
-        for dirpath, dirnames, filenames in os.walk(path):
-            global total_dirs
-            global total_file
-            total_dirs += len(dirnames)
-            total_file += len(filenames)
-
-            for filename in filenames:
-                p = os.path.join(dirpath, filename)
-                try:
-                    sum_size += os.path.getsize(p)
-                except FileNotFoundError as e:
-                    # File path too long (> 260), fk Win32API!
-                    path = "\\\\?\\" + p
-                    sum_size += os.path.getsize(path)
-                except Exception as e:
-                    print(e, file=err_dump)
-
-    raw_size = sum_size
-    str_size = scaler(sum_size)
-
-    return str_size, raw_size
-
 
 def reporter(root, result):
     """ generate the report file,
         using template view defined under ./source/res/
     """
-    global total_size
-
     view = template.read()
     data = 'var data = ['
     entries = ''
 
     choose = 0
-    for key, value in sorted(result.items(), key=lambda x: x[1][1], reverse=True):
+    total_size = 0
+    total_files = 0
+    for node in result.children:
         choose %= len(COLORSET)
         data += (
-            '{ value: %s,'
-            'color: "%s",'
-            'highlight: "%s",'
-            'label: "%s" },'
-            % (value[1], COLORSET[choose][0], COLORSET[choose][1], key)
-        )
+            '{'
+            f'value: {node.folder_size},'
+            f'color: "{COLORSET[choose][0]}",'
+            f'highlight: "{COLORSET[choose][1]}",'
+            f'label: "{node.name}"'
+            '},')
         entries += (
-            '<li class="list-group-item" style="color:%s">%s - %s</li>'
-            % (COLORSET[choose][0], key, value[0])
-        )
-        total_size += value[1]
+            f'<li class="list-group-item" style="color:{COLORSET[choose][0]}">'
+            f'{node.name} - {utils.scaler(node.folder_size)}</li>')
         choose += 1
+        total_size += node.folder_size
+        total_files += node.num_files
     data += '];'
 
-    res = scaler(total_size).split()
+    res = utils.scaler(total_size).split()
     total_size, suffix = res[0], res[1]
-    snapshot.write(view % (root, total_size, suffix, total_file, total_dirs, entries, data))
+    snapshot.write(view % (
+        root, total_size, suffix, total_files, 0, entries, data))
 
     snapshot.close()
     err_dump.close()
@@ -123,13 +73,6 @@ def reporter(root, result):
     if remove_err_log:
         os.remove(ERR_DUMP)
 
-
-def path_norm(path):
-    path.strip()
-    if path[0] == '"':
-        path = path[1:-1]
-    path = os.path.normpath(path)
-    return path
 
 使用方法 = '''
            ** 資料夾容量分布分析 **
@@ -145,14 +88,13 @@ if __name__ == '__main__':
     print(使用方法)
     PATH = input('> ')
     if not PATH:
-        sys.exit(0)
+        exit()
 
-    path = path_norm(PATH)
+    path = utils.path_norm(PATH)
+    root = Tree(path)
     print(path)
-    result = dict()
-    for p in os.listdir(path):
-        pp = os.path.join(path, p)
-        result[p] = treesize(pp)
 
-    reporter(PATH, result)
+    _ = get_tree_size(path, root)
+
+    reporter(PATH, root)
     os.system("start " + FILENAME)
