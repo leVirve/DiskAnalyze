@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Report - Disk Analyzer</title>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+	<script src="%s"></script>
+	<style>
+		html, body {
+			margin: 0 !important;
+			padding: 0 !important;
+			background: #ddd;
+		}
+		nav {
+			color: #eee;
+			text-align: center;
+			margin: 0;
+			padding: 5px 0;
+		}
+		h2 {
+			color: #fff;
+		}
+		.content {
+			max-width: 1280px;
+			margin: 0 auto;
+		}
+		#chart {
+			margin: 50px;
+			float: left;
+		}
+		.entry {
+			float: left;
+			padding: 20px;
+			width: 600px;
+			color: #222;
+		}
+	</style>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+	<div class="container">
+		<h2>Disk Analyzer</h2>
+		<span>%s</span>
+	</div>
+</nav>
+<div class="content">
+	<canvas id="chart" width="450" height="450"></canvas>
+	<div class="entry row">
+		<div class="row">
+			<div class="col-sm-6 col-md-6">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<h3 id="list-group-item-heading">%s</h3>
+						<p id="list-group-item-text">%s</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-md-6">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<h3 id="list-group-item-heading">%d</h3>
+						<p id="list-group-item-text">Total files</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<ul class="list-group">%s</ul>
+	</div>
+</div>
+<script>
+$(function() {
+	var ctx = document.getElementById("chart").getContext("2d");
+	%s
+	var myDoughnutChart = new Chart(ctx).Doughnut(data);
+})
+</script>
+</body>
+</html>
